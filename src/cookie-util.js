@@ -13,16 +13,29 @@ export default class CookieUtil {
    * @returns {string} The value of the cookie.
    */
   static getCookie(name) {
-    const ca = document.cookie.split(';');
-    const caLen = ca.length;
-    const cookieName = `${name}=`;
+    if (!name || name.trim() === '') {
+      return '';
+    }
 
-    for (let i = 0; i < caLen; i += 1) {
-      const c = ca[i].replace(/^\s+/g, '');
-      if (c.indexOf(cookieName) === 0) {
-        return c.substring(cookieName.length, c.length);
+    // Multiple cookies are separated by the semi-colon. Split them into an
+    // array.
+    const cookies = document.cookie.split(';');
+    const cookieName = `${name}=`.toLowerCase();
+
+    // Loop through each of the cookies.
+    for (let i = 0; i < cookies.length; i += 1) {
+      // Sometimes cookies will have leading or trailing white space, especially
+      // after the first cookie. Some may consider trailing white space to be
+      // significant, but some browsers trim it anyway.
+      const cookie = cookies[i].trim();
+
+      // If the cookie matches the cookie we are trying to retrieve, then return
+      // the cookie.
+      if (cookie.toLowerCase().indexOf(cookieName) === 0) {
+        return cookie.substring(cookieName.length, cookie.length);
       }
     }
+
     return '';
   }
 
@@ -32,7 +45,26 @@ export default class CookieUtil {
    * @param {string} name The name of the cookie to delete.
    */
   static deleteCookie(name) {
-    this.setCookie(name, '', -1, null);
+    if (!name || name.trim() === '') {
+      return;
+    }
+
+    // Multiple cookies are separated by the semi-colon. Split them into an
+    // array.
+    const cookies = document.cookie.split(';');
+
+    // Loop through each of the cookies.
+    for (let i = 0; i < cookies.length; i += 1) {
+      // Sometimes cookies will have leading or trailing white space, especially
+      // after the first cookie and it must be removed.
+      const cookie = cookies[i].trim();
+      const cookieName = cookie.substring(0, cookie.indexOf('='));
+
+      // Check if the cookie matches the cookie we are trying to delete.
+      if (name.toLowerCase() === cookieName.toLowerCase()) {
+        this.setCookie(cookieName, '', -1, null);
+      }
+    }
   }
 
   /**
@@ -44,6 +76,10 @@ export default class CookieUtil {
    * @param {string} expiryDate The date on which the cookie expires.
    */
   static setCookie(name, value, expireDays, expiryDate) {
+    if (!name || name.trim() === '') {
+      return;
+    }
+
     let expires = null;
     if (expireDays) {
       const d = new Date();
@@ -54,6 +90,6 @@ export default class CookieUtil {
       expires = `expires=${d}`;
     }
 
-    document.cookie = `${name}=${value}; ${expires};SameSite=Strict`;
+    document.cookie = `${name}=${value ?? ''}; ${expires};SameSite=Strict`;
   }
 }
